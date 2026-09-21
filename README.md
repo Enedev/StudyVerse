@@ -82,9 +82,10 @@ Implemented:
 - Interactive 3D storybook with physical page-turn navigation
 - Responsive interface previews for tasks, calendar, whiteboards, library,
   documents, reader, and settings
+- Authenticated task, subtask, and calendar event CRUD through NestJS and RLS
 - Secure NestJS foundation, health endpoint, and current-profile endpoint
 - Initial relational schema, indexes, triggers, RLS, and Storage policies
 
-Workspace previews are explicitly labeled and use example data. Their
-persistence layers, tldraw editing, PDF.js rendering, uploads, and realtime
-collaboration belong to dedicated implementation phases.
+Tasks and the monthly calendar use persisted user-owned data. Whiteboards,
+library, and document previews remain explicitly labeled until their tldraw,
+PDF.js, upload, and realtime phases are implemented.
