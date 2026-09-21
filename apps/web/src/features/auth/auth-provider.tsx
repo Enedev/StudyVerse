@@ -10,6 +10,7 @@ import {
   AuthContext,
   type AuthContextValue,
 } from '@/features/auth/auth-context';
+import { apiFetch } from '@/lib/api/client';
 import { supabase } from '@/lib/supabase/client';
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -52,13 +53,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
         if (error) throw error;
       },
       signUp: async ({ email, password, displayName }) => {
-        const { error } = await supabase.auth.signUp({
+        await apiFetch('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ email, password, displayName }),
+        });
+        const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
-          options: {
-            data: { display_name: displayName },
-            emailRedirectTo: `${window.location.origin}/auth/confirmed`,
-          },
         });
         if (error) throw error;
       },

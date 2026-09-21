@@ -77,7 +77,7 @@ export function RegisterPage() {
   return (
     <AuthCard
       title="Begin your story"
-      description="Create your calm, connected academic workspace."
+        description="Create your account and go straight into the workspace. No confirmation email."
       footer={
         <>
           Already have an account?{' '}
