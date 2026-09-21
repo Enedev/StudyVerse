@@ -14,6 +14,8 @@ the repository.
    `supabase/migrations/003_storage.sql`.
 6. Run `supabase/migrations/004_profile_backfill.sql` to create profiles for
    users who registered before the migrations were applied.
+7. Run `supabase/migrations/005_whiteboard_collaboration.sql` so editors can
+   save shared canvases and owners can invite collaborators by email.
 
 Run each file only once and in that order. The first migration creates the
 tables and profile trigger, the second enables RLS, the third creates private

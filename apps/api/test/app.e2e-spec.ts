@@ -41,6 +41,9 @@ describe('Health endpoint (e2e)', () => {
         to: '2026-10-01T00:00:00.000Z',
       })
       .expect(401);
+    await request(app.getHttpServer()).get('/api/v1/whiteboards').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/books').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/documents').expect(401);
   });
 
   afterEach(async () => {

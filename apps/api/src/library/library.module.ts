@@ -1,4 +1,12 @@
 import { Module } from '@nestjs/common';
 
-@Module({})
+import { AuthModule } from '../auth/auth.module.js';
+import { LibraryController } from './library.controller.js';
+import { LibraryService } from './library.service.js';
+
+@Module({
+  imports: [AuthModule],
+  controllers: [LibraryController],
+  providers: [LibraryService],
+})
 export class LibraryModule {}
