@@ -1,111 +1,112 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/newsreader';
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Newsreader Variable', ui-serif, Georgia, serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --shadow-book: 0 24px 80px -28px oklch(0.24 0.025 65 / 0.32);
+}
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --background: oklch(0.975 0.012 84);
+  --foreground: oklch(0.245 0.022 252);
+  --card: oklch(0.995 0.006 84);
+  --card-foreground: oklch(0.245 0.022 252);
+  --primary: oklch(0.32 0.052 249);
+  --primary-foreground: oklch(0.98 0.008 84);
+  --secondary: oklch(0.91 0.025 145);
+  --secondary-foreground: oklch(0.29 0.035 150);
+  --muted: oklch(0.94 0.012 83);
+  --muted-foreground: oklch(0.52 0.024 251);
+  --accent: oklch(0.78 0.085 78);
+  --accent-foreground: oklch(0.27 0.035 58);
+  --destructive: oklch(0.58 0.19 25);
+  --border: oklch(0.88 0.018 82);
+  --input: oklch(0.89 0.016 82);
+  --ring: oklch(0.55 0.065 248);
+  --radius: 0.75rem;
+  color-scheme: light;
+}
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+.dark {
+  --background: oklch(0.19 0.018 253);
+  --foreground: oklch(0.93 0.012 83);
+  --card: oklch(0.225 0.021 251);
+  --card-foreground: oklch(0.93 0.012 83);
+  --primary: oklch(0.79 0.04 239);
+  --primary-foreground: oklch(0.18 0.02 253);
+  --secondary: oklch(0.3 0.035 150);
+  --secondary-foreground: oklch(0.91 0.02 145);
+  --muted: oklch(0.26 0.018 250);
+  --muted-foreground: oklch(0.7 0.02 247);
+  --accent: oklch(0.72 0.09 79);
+  --accent-foreground: oklch(0.2 0.025 62);
+  --destructive: oklch(0.66 0.17 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.65 0.05 242);
+  color-scheme: dark;
+}
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground min-w-80 font-sans antialiased;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    @apply bg-accent/55 text-foreground;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+@layer utilities {
+  .paper-grain {
+    background-image:
+      radial-gradient(circle at 20% 20%, oklch(1 0 0 / 45%) 0 1px, transparent 1px),
+      radial-gradient(circle at 80% 70%, oklch(0.4 0.02 70 / 5%) 0 1px, transparent 1px);
+    background-size:
+      23px 23px,
+      31px 31px;
   }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  .text-balance {
+    text-wrap: balance;
   }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }
