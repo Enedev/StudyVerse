@@ -7,10 +7,15 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
   server: {
     port: 5173,
+  },
+  build: {
+    // The shared shell includes auth, query, routing, and motion runtimes.
+    // Feature pages are route-split and remain small.
+    chunkSizeWarningLimit: 750,
   },
 })

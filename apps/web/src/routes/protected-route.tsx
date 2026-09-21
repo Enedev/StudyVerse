@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { PageLoader } from '@/components/feedback/page-loader';
-import { useAuth } from '@/features/auth/auth-context';
+import { useAuth } from '@/features/auth/use-auth';
 
 export function ProtectedRoute() {
   const { user, isLoading } = useAuth();

@@ -1,3 +1,4 @@
+/* oxlint-disable react/only-export-components -- route-level lazy components belong with the router */
 import {
   BookOpen,
   CalendarDays,
@@ -6,20 +7,51 @@ import {
   Settings,
   Shapes,
 } from 'lucide-react';
+import { lazy, type ReactNode, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
 import { ModulePlaceholder } from '@/components/feedback/module-placeholder';
-import { DashboardPage } from '@/features/dashboard/dashboard-page';
-import { ForgotPasswordPage } from '@/features/auth/forgot-password-page';
-import { LoginPage } from '@/features/auth/login-page';
-import { RegisterPage } from '@/features/auth/register-page';
-import { HomePage } from '@/features/welcome/home-page';
-import { WelcomePage } from '@/features/welcome/welcome-page';
+import { PageLoader } from '@/components/feedback/page-loader';
 import { AppLayout } from '@/layouts/app-layout';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { PublicLayout } from '@/layouts/public-layout';
 import { NotFoundPage } from '@/routes/not-found-page';
 import { ProtectedRoute } from '@/routes/protected-route';
+
+const HomePage = lazy(() =>
+  import('@/features/welcome/home-page').then((module) => ({
+    default: module.HomePage,
+  })),
+);
+const WelcomePage = lazy(() =>
+  import('@/features/welcome/welcome-page').then((module) => ({
+    default: module.WelcomePage,
+  })),
+);
+const LoginPage = lazy(() =>
+  import('@/features/auth/login-page').then((module) => ({
+    default: module.LoginPage,
+  })),
+);
+const RegisterPage = lazy(() =>
+  import('@/features/auth/register-page').then((module) => ({
+    default: module.RegisterPage,
+  })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import('@/features/auth/forgot-password-page').then((module) => ({
+    default: module.ForgotPasswordPage,
+  })),
+);
+const DashboardPage = lazy(() =>
+  import('@/features/dashboard/dashboard-page').then((module) => ({
+    default: module.DashboardPage,
+  })),
+);
+
+function lazyPage(page: ReactNode) {
+  return <Suspense fallback={<PageLoader />}>{page}</Suspense>;
+}
 
 const modulePages = {
   tasks: (
@@ -112,16 +144,19 @@ export const router = createBrowserRouter([
   {
     element: <PublicLayout />,
     children: [
-      { path: '/', element: <HomePage /> },
-      { path: '/welcome', element: <WelcomePage /> },
+      { path: '/', element: lazyPage(<HomePage />) },
+      { path: '/welcome', element: lazyPage(<WelcomePage />) },
     ],
   },
   {
     element: <AuthLayout />,
     children: [
-      { path: '/login', element: <LoginPage /> },
-      { path: '/register', element: <RegisterPage /> },
-      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/login', element: lazyPage(<LoginPage />) },
+      { path: '/register', element: lazyPage(<RegisterPage />) },
+      {
+        path: '/forgot-password',
+        element: lazyPage(<ForgotPasswordPage />),
+      },
     ],
   },
   {
@@ -130,7 +165,7 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { path: '/dashboard', element: <DashboardPage /> },
+          { path: '/dashboard', element: lazyPage(<DashboardPage />) },
           { path: '/tasks', element: modulePages.tasks },
           { path: '/calendar', element: modulePages.calendar },
           { path: '/whiteboards', element: modulePages.whiteboards },

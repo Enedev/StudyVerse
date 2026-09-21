@@ -12,7 +12,7 @@ import { Brand } from '@/components/navigation/brand';
 import { ThemeToggle } from '@/components/navigation/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/features/auth/auth-context';
+import { useAuth } from '@/features/auth/use-auth';
 import { cn } from '@/lib/utils';
 
 function NavigationLink({

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AuthCard } from '@/features/auth/auth-card';
-import { useAuth } from '@/features/auth/auth-context';
+import { useAuth } from '@/features/auth/use-auth';
 
 const registerSchema = z
   .object({

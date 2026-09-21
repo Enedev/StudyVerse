@@ -4,7 +4,7 @@ import type { PropsWithChildren } from 'react';
 import { Toaster } from 'sonner';
 
 import { queryClient } from '@/app/query-client';
-import { AuthProvider } from '@/features/auth/auth-context';
+import { AuthProvider } from '@/features/auth/auth-provider';
 
 export function AppProviders({ children }: PropsWithChildren) {
   return (

@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 import { EmptyState } from '@/components/feedback/empty-state';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useAuth } from '@/features/auth/auth-context';
+import { useAuth } from '@/features/auth/use-auth';
 
 const spaces = [
   {
