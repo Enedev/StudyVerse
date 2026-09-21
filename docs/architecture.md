@@ -54,7 +54,7 @@ policies require that first path segment to equal `auth.uid()`.
 
 The following choices should be made in their dedicated phases:
 
-- tldraw snapshot granularity and realtime conflict strategy
+- realtime whiteboard sync on top of the saved Excalidraw scene
 - PDF text indexing and annotation geometry format
 - recurring-calendar expansion strategy
 - signed upload lifecycle and orphan cleanup

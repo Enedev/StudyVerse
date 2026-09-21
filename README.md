@@ -81,7 +81,7 @@ Implemented:
 - Responsive product shell and initial design system
 - Interactive 3D storybook with physical page-turn navigation
 - Authenticated task, subtask, and calendar event CRUD through NestJS and RLS
-- Persistent tldraw whiteboards with owner, editor, and viewer roles
+- Persistent Excalidraw whiteboards with owner, editor, and viewer roles
 - Personal library with covers, progress, and favorites
 - Private PDF upload, reading, search, notes, and bookmarks
 - Secure NestJS foundation, health endpoint, and current-profile endpoint

@@ -79,7 +79,7 @@ export function WhiteboardsPage() {
         icon={Shapes}
         eyebrow="Think without edges"
         title="Whiteboards"
-        description="Draw, write, and arrange ideas on a real tldraw canvas. Every change is saved to your private workspace."
+        description="Draw and arrange ideas on a canvas that saves to your StudyVerse account. Nothing is stored as a local file."
       />
 
       <Card className="flex flex-col gap-3 p-4 sm:flex-row">

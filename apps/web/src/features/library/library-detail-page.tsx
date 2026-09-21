@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PdfReader } from '@/features/documents/pdf-reader';
 import { createSignedFileUrl } from '@/lib/storage';
 
 import { getBook, setBookFavorite, updateBook } from './library-api';
@@ -50,6 +51,36 @@ export function LibraryDetailPage() {
       toast.success('Reading progress saved.');
     },
   });
+
+  if (book?.documentId) {
+    return (
+      <PdfReader
+        documentId={book.documentId}
+        backTo="/library"
+        backLabel="Back to library"
+        headerExtra={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setBookFavorite(book.id, !book.isFavorite).then(() =>
+                bookQuery.refetch(),
+              )
+            }
+          >
+            <Heart className={book.isFavorite ? 'fill-rose-500 text-rose-500' : ''} />
+            {book.isFavorite ? 'Favorited' : 'Favorite'}
+          </Button>
+        }
+        onPageChange={(nextPage, pageCount) => {
+          void updateBook(book.id, {
+            lastOpenedPage: nextPage,
+            readingProgress: Math.round((nextPage / pageCount) * 100),
+          });
+        }}
+      />
+    );
+  }
 
   if (bookQuery.isLoading) {
     return <div className="text-muted-foreground flex justify-center py-20"><LoaderCircle className="animate-spin" /></div>;

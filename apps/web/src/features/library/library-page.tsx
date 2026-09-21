@@ -19,6 +19,8 @@ import { PageHeader } from '@/components/workspace/page-header';
 import { useAuth } from '@/features/auth/use-auth';
 import { uploadPrivateFile } from '@/lib/storage';
 
+import { createDocument, deleteDocument } from '@/features/documents/documents-api';
+
 import { createBook, deleteBook, listBooks, setBookFavorite } from './library-api';
 import type { Book } from './library-types';
 
@@ -42,6 +44,7 @@ export function LibraryPage() {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [categories, setCategories] = useState('');
+  const [bookFile, setBookFile] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const queryClient = useQueryClient();
   const booksQuery = useQuery({
@@ -71,6 +74,22 @@ export function LibraryPage() {
     event.preventDefault();
     if (!user) return;
     try {
+      let documentId: string | undefined;
+      if (bookFile) {
+        if (bookFile.type !== 'application/pdf') {
+          toast.error('The book file must be a PDF.');
+          return;
+        }
+        const storagePath = `${user.id}/${crypto.randomUUID()}.pdf`;
+        await uploadPrivateFile('documents', storagePath, bookFile);
+        const document = await createDocument({
+          title: title.trim(),
+          originalFilename: bookFile.name,
+          storagePath,
+          sizeBytes: bookFile.size,
+        });
+        documentId = document.id;
+      }
       let coverPath: string | undefined;
       if (cover) {
         const extension = cover.name.split('.').pop()?.toLowerCase() || 'jpg';
@@ -85,10 +104,12 @@ export function LibraryPage() {
           .map((item) => item.trim())
           .filter(Boolean),
         coverPath,
+        documentId,
       });
       setTitle('');
       setAuthor('');
       setCategories('');
+      setBookFile(null);
       setCover(null);
       toast.success('Book added to your library.');
     } catch (error) {
@@ -106,11 +127,18 @@ export function LibraryPage() {
       />
 
       <Card className="p-5">
-        <form className="grid gap-3 lg:grid-cols-[1.2fr_1fr_1fr_auto_auto]" onSubmit={(event) => void submit(event)}>
+        <form className="grid gap-3 lg:grid-cols-2" onSubmit={(event) => void submit(event)}>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title" required maxLength={240} />
           <Input value={author} onChange={(event) => setAuthor(event.target.value)} placeholder="Author" maxLength={180} />
           <Input value={categories} onChange={(event) => setCategories(event.target.value)} placeholder="Categories, separated by commas" />
-          <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCover(event.target.files?.[0] ?? null)} />
+          <label className="text-muted-foreground text-xs">
+            Book PDF
+            <Input className="mt-1" type="file" accept="application/pdf,.pdf" onChange={(event) => setBookFile(event.target.files?.[0] ?? null)} />
+          </label>
+          <label className="text-muted-foreground text-xs">
+            Cover image, optional
+            <Input className="mt-1" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCover(event.target.files?.[0] ?? null)} />
+          </label>
           <Button disabled={createMutation.isPending || !title.trim()}>
             {createMutation.isPending ? <LoaderCircle className="animate-spin" /> : <Plus />}
             Add
@@ -163,9 +191,11 @@ export function LibraryPage() {
                       <Heart className={book.isFavorite ? 'fill-rose-500 text-rose-500' : ''} />
                     </Button>
                     <Button variant="ghost" size="icon" aria-label="Delete book" onClick={() => {
-                      if (window.confirm(`Delete "${book.title}"?`)) {
-                        deleteMutation.mutate(book.id);
-                      }
+                      if (!window.confirm(`Delete "${book.title}"?`)) return;
+                      void (async () => {
+                        await deleteMutation.mutateAsync(book.id);
+                        if (book.documentId) await deleteDocument(book.documentId);
+                      })();
                     }}>
                       <Trash2 />
                     </Button>
