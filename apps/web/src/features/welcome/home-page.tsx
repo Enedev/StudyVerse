@@ -1,105 +1,21 @@
 import { motion } from 'framer-motion';
-import {
-  ArrowRight,
-  BookOpen,
-  CalendarDays,
-  Check,
-  FileText,
-  Shapes,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowRight, BookOpen, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-
-const featureCards = [
-  {
-    icon: CalendarDays,
-    title: 'Plan with clarity',
-    description: 'Bring assignments, focus sessions, and deadlines together.',
-  },
-  {
-    icon: Shapes,
-    title: 'Think out loud',
-    description: 'Explore ideas on spacious collaborative whiteboards.',
-  },
-  {
-    icon: FileText,
-    title: 'Read deeply',
-    description: 'Keep documents, notes, and progress close at hand.',
-  },
-];
-
-function Storybook() {
-  return (
-    <motion.div
-      className="relative mx-auto aspect-[4/3] w-full max-w-2xl [perspective:1400px]"
-      initial={{ opacity: 0, y: 30, rotateX: 8 }}
-      animate={{ opacity: 1, y: 0, rotateX: 0 }}
-      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <div className="absolute inset-x-[5%] bottom-[7%] h-[12%] rounded-[50%] bg-black/20 blur-2xl" />
-      <div className="absolute inset-[8%_2%_12%] [transform:rotateX(58deg)_rotateZ(-1deg)] [transform-style:preserve-3d]">
-        <div className="bg-primary absolute inset-0 rounded-[1.4rem] shadow-book" />
-        <div className="absolute inset-[2%] grid grid-cols-2 overflow-hidden rounded-xl [transform:translateZ(14px)]">
-          <div className="relative border-r border-[#d8ceb9] bg-[#f5edda] p-[8%] text-[#283443]">
-            <div className="absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-black/8 to-transparent" />
-            <div className="mb-[8%] flex items-center gap-2 text-[clamp(8px,1.2vw,13px)] font-semibold">
-              <span className="flex size-5 items-center justify-center rounded-md bg-[#b8ccb8]">
-                <Check className="size-3" />
-              </span>
-              Today’s chapter
-            </div>
-            <div className="space-y-[5%]">
-              {['Review biology notes', 'Essay outline', 'Study session'].map(
-                (item, index) => (
-                  <div
-                    className="flex items-center gap-2 rounded-md bg-white/65 px-[5%] py-[4%] text-[clamp(6px,1vw,11px)] shadow-sm"
-                    key={item}
-                  >
-                    <span
-                      className={`size-2.5 rounded-full border ${index === 0 ? 'border-[#64806b] bg-[#8eac94]' : 'border-[#b9ae98]'}`}
-                    />
-                    {item}
-                  </div>
-                ),
-              )}
-            </div>
-            <div className="absolute bottom-[9%] left-[12%] h-[30%] w-[12%] origin-bottom rounded-t-full bg-[#718d78] [transform:translateZ(32px)_rotateX(-42deg)]" />
-            <div className="absolute bottom-[9%] left-[23%] h-[22%] w-[10%] origin-bottom rounded-t-full bg-[#d5ab70] [transform:translateZ(24px)_rotateX(-42deg)]" />
-          </div>
-
-          <div className="relative bg-[#fbf5e8] p-[8%] text-[#283443]">
-            <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-black/9 to-transparent" />
-            <div className="font-serif text-[clamp(11px,2vw,24px)] leading-tight">
-              Make space
-              <br />
-              for wonder.
-            </div>
-            <div className="absolute right-[10%] bottom-[12%] left-[10%] h-[38%]">
-              <div className="absolute inset-x-0 bottom-0 h-[28%] rounded-sm bg-[#c9d8d0] [transform:translateZ(18px)]" />
-              <div className="absolute bottom-[18%] left-[12%] h-[52%] w-[18%] origin-bottom bg-[#d9a56e] [clip-path:polygon(50%_0,100%_100%,0_100%)] [transform:translateZ(44px)_rotateX(-38deg)]" />
-              <div className="absolute bottom-[18%] left-[38%] h-[72%] w-[24%] origin-bottom bg-[#839baa] [clip-path:polygon(50%_0,100%_100%,0_100%)] [transform:translateZ(56px)_rotateX(-36deg)]" />
-              <div className="absolute right-[8%] bottom-[18%] h-[45%] w-[18%] origin-bottom bg-[#a7b99d] [clip-path:polygon(50%_0,100%_100%,0_100%)] [transform:translateZ(36px)_rotateX(-40deg)]" />
-              <Sparkles className="text-[#b88d42] absolute top-0 right-[5%] size-[12%] [transform:translateZ(70px)_rotateX(-48deg)]" />
-            </div>
-          </div>
-        </div>
-        <div className="absolute top-[3%] bottom-[3%] left-1/2 w-px bg-black/15 [transform:translateZ(17px)]" />
-      </div>
-    </motion.div>
-  );
-}
+import { InteractiveStorybook } from '@/features/welcome/storybook/interactive-storybook';
 
 export function HomePage() {
   return (
     <>
-      <section className="relative overflow-hidden px-5 pt-16 pb-24 sm:pt-24 lg:px-8 lg:pt-28">
-        <div className="bg-secondary/60 absolute top-16 left-[8%] size-52 rounded-full blur-3xl" />
-        <div className="bg-accent/20 absolute top-28 right-[8%] size-64 rounded-full blur-3xl" />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.86fr_1.14fr]">
+      <main className="relative overflow-hidden">
+        <div className="bg-secondary/55 absolute top-20 left-[5%] size-64 rounded-full blur-3xl" />
+        <div className="bg-accent/18 absolute top-40 right-[4%] size-72 rounded-full blur-3xl" />
+
+        <section className="relative px-4 pt-16 pb-24 sm:px-6 sm:pt-24 lg:px-8 lg:pt-28">
           <motion.div
+            className="mx-auto max-w-4xl text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
@@ -109,66 +25,69 @@ export function HomePage() {
               className="bg-background/65 mb-6 gap-2 py-1.5 backdrop-blur"
             >
               <Sparkles className="text-accent-foreground size-3.5" />
-              A calmer way to study
+              Your academic world, in one living book
             </Badge>
-            <h1 className="text-balance font-serif text-5xl leading-[0.98] font-medium tracking-[-0.045em] sm:text-6xl xl:text-7xl">
-              Your learning,
-              <span className="text-muted-foreground italic"> beautifully </span>
-              organized.
+            <h1 className="text-balance font-serif text-5xl leading-[0.96] font-medium tracking-[-0.05em] sm:text-6xl lg:text-7xl xl:text-8xl">
+              Turn the page.
+              <span className="text-muted-foreground block italic">
+                Discover how you learn.
+              </span>
             </h1>
-            <p className="text-muted-foreground mt-7 max-w-xl text-base leading-relaxed sm:text-lg">
-              StudyVerse brings your plans, ideas, readings, and academic
-              momentum into one thoughtful workspace.
+            <p className="text-muted-foreground mx-auto mt-7 max-w-2xl text-base leading-relaxed sm:text-lg">
+              Explore StudyVerse as a real interactive book. Each page opens a
+              new space for planning, thinking, reading, and remembering.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button size="lg" asChild>
                 <Link to="/register">
                   Begin your story <ArrowRight />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/welcome">
+                <a href="#interactive-book">
                   <BookOpen />
-                  Explore
-                </Link>
+                  Open the book
+                </a>
               </Button>
             </div>
-            <p className="text-muted-foreground mt-5 text-xs">
-              Free to begin · Designed for focused minds
-            </p>
           </motion.div>
-          <Storybook />
-        </div>
-      </section>
 
-      <section className="border-y bg-card/55 px-5 py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="max-w-2xl">
-            <p className="text-muted-foreground text-xs font-semibold tracking-[0.2em] uppercase">
-              One connected workspace
+          <motion.div
+            id="interactive-book"
+            className="mx-auto mt-20 max-w-[90rem] scroll-mt-24"
+            initial={{ opacity: 0, y: 36, rotateX: 4 }}
+            animate={{ opacity: 1, y: 0, rotateX: 0 }}
+            transition={{
+              duration: 0.9,
+              delay: 0.15,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
+            <InteractiveStorybook />
+          </motion.div>
+        </section>
+
+        <section className="bg-primary text-primary-foreground relative overflow-hidden px-5 py-20 text-center lg:px-8">
+          <div className="absolute -top-24 left-1/2 size-80 -translate-x-1/2 rounded-full border border-white/10" />
+          <div className="relative">
+            <p className="text-accent text-xs font-semibold tracking-[0.22em] uppercase">
+              Your next chapter
             </p>
-            <h2 className="text-balance mt-4 font-serif text-4xl font-medium sm:text-5xl">
-              Less time arranging. More time understanding.
+            <h2 className="text-balance mx-auto mt-4 max-w-3xl font-serif text-4xl font-medium sm:text-6xl">
+              Everything you need to learn. One beautiful workspace.
             </h2>
+            <Button
+              className="mt-9 bg-white text-slate-900 hover:bg-white/90"
+              size="lg"
+              asChild
+            >
+              <Link to="/register">
+                Get started <ArrowRight />
+              </Link>
+            </Button>
           </div>
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            {featureCards.map(({ icon: Icon, title, description }) => (
-              <div
-                key={title}
-                className="bg-background/60 rounded-2xl border p-6 shadow-sm"
-              >
-                <div className="bg-secondary text-secondary-foreground flex size-11 items-center justify-center rounded-xl">
-                  <Icon className="size-5" />
-                </div>
-                <h3 className="mt-6 font-semibold">{title}</h3>
-                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                  {description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <footer className="px-5 py-8 lg:px-8">
         <div className="text-muted-foreground mx-auto flex max-w-7xl flex-col gap-2 text-xs sm:flex-row sm:items-center sm:justify-between">
