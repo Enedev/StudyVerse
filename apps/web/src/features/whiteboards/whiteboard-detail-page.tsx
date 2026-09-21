@@ -1,179 +1,200 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
-  Hand,
-  Image,
-  Maximize,
-  Minus,
-  MousePointer2,
-  Pencil,
-  Plus,
-  Redo2,
-  Share2,
-  Square,
-  StickyNote,
-  Type,
-  Undo2,
+  LoaderCircle,
+  Trash2,
+  UserPlus,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Tldraw, type Editor } from 'tldraw';
+import 'tldraw/tldraw.css';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
-const titles: Record<string, string> = {
-  'cell-biology-map': 'Cell biology concept map',
-  'research-plan': 'Research presentation plan',
-  'calculus-review': 'Calculus review',
-};
-
-const tools = [
-  { label: 'Select', icon: MousePointer2 },
-  { label: 'Hand', icon: Hand },
-  { label: 'Draw', icon: Pencil },
-  { label: 'Shape', icon: Square },
-  { label: 'Text', icon: Type },
-  { label: 'Sticky note', icon: StickyNote },
-  { label: 'Image', icon: Image },
-];
+import {
+  getWhiteboard,
+  inviteWhiteboardMember,
+  removeWhiteboardMember,
+  saveWhiteboard,
+} from './whiteboards-api';
 
 export function WhiteboardDetailPage() {
   const { id = '' } = useParams();
-  const [zoom, setZoom] = useState(100);
-  const title = titles[id] ?? 'Whiteboard preview';
+  const boardQuery = useQuery({
+    queryKey: ['whiteboard', id],
+    queryFn: () => getWhiteboard(id),
+    enabled: Boolean(id),
+  });
+  const [saveState, setSaveState] = useState<'Saved' | 'Saving' | 'Unsaved'>(
+    'Saved',
+  );
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<'editor' | 'viewer'>('editor');
+  const saveTimer = useRef<number | null>(null);
+  const board = boardQuery.data;
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    };
+  }, []);
+
+  const scheduleSave = (editor: Editor) => {
+    if (board?.role === 'viewer') return;
+    setSaveState('Unsaved');
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      setSaveState('Saving');
+      void saveWhiteboard(id, {
+        snapshot: editor.getSnapshot() as unknown as Record<string, unknown>,
+      })
+        .then(() => setSaveState('Saved'))
+        .catch((error: unknown) => {
+          setSaveState('Unsaved');
+          toast.error(
+            error instanceof Error ? error.message : 'Unable to save the canvas.',
+          );
+        });
+    }, 900);
+  };
+
+  const invite = async () => {
+    try {
+      await inviteWhiteboardMember(id, email.trim(), role);
+      setEmail('');
+      await boardQuery.refetch();
+      toast.success('Collaborator invited.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to invite.');
+    }
+  };
+
+  if (boardQuery.isLoading) {
+    return (
+      <div className="text-muted-foreground flex h-[70vh] items-center justify-center gap-2">
+        <LoaderCircle className="animate-spin" />
+        Opening canvas…
+      </div>
+    );
+  }
+
+  if (boardQuery.isError || !board) {
+    return (
+      <div className="py-20 text-center">
+        <h1 className="font-serif text-3xl">This whiteboard is unavailable</h1>
+        <Button className="mt-5" asChild>
+          <Link to="/whiteboards">Back to whiteboards</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="-m-5 flex h-[calc(100vh-4.5rem)] min-h-[42rem] flex-col sm:-m-7 lg:-m-10">
+      <div className="bg-card flex flex-wrap items-center gap-3 border-b px-4 py-3">
         <Button variant="ghost" size="icon" asChild>
           <Link to="/whiteboards" aria-label="Back to whiteboards">
             <ArrowLeft />
           </Link>
         </Button>
         <div className="min-w-0">
-          <h2 className="truncate text-sm font-semibold">{title}</h2>
-          <p className="text-muted-foreground text-xs">
-            Example board · Editing not connected
+          <h1 className="truncate text-sm font-semibold">{board.title}</h1>
+          <p className="text-muted-foreground text-xs capitalize">
+            {board.role} · {saveState}
           </p>
         </div>
-        <Badge variant="secondary" className="ml-auto">
-          tldraw preview
-        </Badge>
-        <Button
-          variant="outline"
-          disabled
-          title="Sharing arrives with whiteboard persistence"
-        >
-          <Share2 />
-          Share
-        </Button>
+        {board.role === 'owner' && (
+          <div className="ml-auto flex w-full flex-wrap items-center gap-2 lg:w-auto">
+            <Input
+              className="h-9 w-full sm:w-56"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="student@example.com"
+              type="email"
+            />
+            <select
+              className="border-input bg-background h-9 rounded-lg border px-2 text-xs"
+              value={role}
+              onChange={(event) =>
+                setRole(event.target.value as 'editor' | 'viewer')
+              }
+            >
+              <option value="editor">Can edit</option>
+              <option value="viewer">Can view</option>
+            </select>
+            <Button size="sm" onClick={() => void invite()} disabled={!email.trim()}>
+              <UserPlus />
+              Invite
+            </Button>
+          </div>
+        )}
       </div>
 
-      <Card className="relative h-[calc(100vh-11rem)] min-h-[34rem] overflow-hidden bg-[#f7f4eb] dark:bg-[#141c26]">
-        <div className="absolute inset-0 opacity-45 [background-image:radial-gradient(#718096_0.7px,transparent_0.7px)] [background-size:18px_18px]" />
-
-        <div className="absolute top-4 left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 gap-1 overflow-x-auto rounded-xl border bg-card/90 p-1.5 shadow-lg backdrop-blur">
-          {tools.map(({ label, icon: Icon }, index) => (
-            <button
-              key={label}
-              type="button"
-              disabled
-              title={`${label} will be powered by tldraw`}
-              className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-                index === 0
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground'
-              }`}
-              aria-label={label}
-            >
-              <Icon className="size-4" />
-            </button>
-          ))}
-          <span className="bg-border mx-1 w-px shrink-0" />
-          <button
-            type="button"
-            disabled
-            className="text-muted-foreground flex size-9 shrink-0 items-center justify-center"
-            aria-label="Undo"
-          >
-            <Undo2 className="size-4" />
-          </button>
-          <button
-            type="button"
-            disabled
-            className="text-muted-foreground flex size-9 shrink-0 items-center justify-center"
-            aria-label="Redo"
-          >
-            <Redo2 className="size-4" />
-          </button>
+      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_16rem]">
+        <div className="tldraw-theme min-h-0">
+          <Tldraw
+            onMount={(editor) => {
+              if (Object.keys(board.snapshot).length > 0) {
+                editor.loadSnapshot(board.snapshot);
+              }
+              if (board.role === 'viewer') {
+                editor.updateInstanceState({ isReadonly: true });
+              }
+              editor.store.listen(
+                () => scheduleSave(editor),
+                { source: 'user', scope: 'document' },
+              );
+            }}
+          />
         </div>
-
-        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-          <div
-            className="relative h-[30rem] w-[48rem] shrink-0 transition-transform duration-200"
-            style={{ transform: `scale(${zoom / 100})` }}
-          >
-            <div className="absolute top-[12%] left-[33%] rounded-full border-2 border-amber-500 bg-amber-50 px-6 py-3 font-serif text-lg font-medium text-amber-900 shadow-md dark:bg-amber-950 dark:text-amber-100">
-              How does a cell make energy?
+        {board.role === 'owner' && (
+          <aside className="bg-card hidden overflow-y-auto border-l p-4 lg:block">
+            <h2 className="text-sm font-semibold">Collaborators</h2>
+            <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+              Editors can change the canvas. Live cursors require the later
+              realtime phase.
+            </p>
+            <div className="mt-4 space-y-2">
+              {board.members.length === 0 ? (
+                <p className="text-muted-foreground text-xs">
+                  Only you can access this board.
+                </p>
+              ) : (
+                board.members.map((member) => (
+                  <div
+                    key={member.userId}
+                    className="flex items-center justify-between gap-2 rounded-lg border p-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-mono text-[10px]">
+                        {member.userId}
+                      </p>
+                      <p className="text-muted-foreground text-[10px] capitalize">
+                        {member.role}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Remove collaborator"
+                      onClick={() =>
+                        void removeWhiteboardMember(id, member.userId).then(() =>
+                          boardQuery.refetch(),
+                        )
+                      }
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                ))
+              )}
             </div>
-            <div className="bg-foreground/25 absolute top-[37%] left-[42%] h-px w-44 rotate-[32deg]" />
-            <div className="bg-foreground/25 absolute top-[39%] left-[31%] h-px w-40 rotate-[145deg]" />
-            <div className="absolute top-[52%] left-[14%] rounded-full border-2 border-emerald-500 bg-emerald-50 px-5 py-2.5 font-medium text-emerald-900 shadow dark:bg-emerald-950 dark:text-emerald-100">
-              Glycolysis
-            </div>
-            <div className="absolute top-[58%] right-[13%] rounded-full border-2 border-sky-500 bg-sky-50 px-5 py-2.5 font-medium text-sky-900 shadow dark:bg-sky-950 dark:text-sky-100">
-              Mitochondria
-            </div>
-            <div className="absolute right-[31%] bottom-[5%] w-44 rotate-2 bg-yellow-200 p-5 text-sm text-yellow-950 shadow-lg">
-              <StickyNote className="mb-3 size-5" />
-              ATP stores usable energy for the cell.
-            </div>
-            <div className="absolute top-[42%] right-[26%] text-violet-600">
-              <MousePointer2 className="size-5 fill-current" />
-              <span className="ml-4 rounded bg-violet-600 px-2 py-1 text-[10px] text-white">
-                Maya
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-4 left-4 z-20 flex items-center gap-1 rounded-xl border bg-card/90 p-1.5 shadow-lg backdrop-blur">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setZoom((value) => Math.max(60, value - 10))}
-            aria-label="Zoom out"
-          >
-            <Minus />
-          </Button>
-          <span className="text-muted-foreground w-12 text-center text-xs font-semibold">
-            {zoom}%
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setZoom((value) => Math.min(160, value + 10))}
-            aria-label="Zoom in"
-          >
-            <Plus />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setZoom(100)}
-            aria-label="Reset zoom"
-          >
-            <Maximize />
-          </Button>
-        </div>
-
-        <div className="absolute right-4 bottom-4 max-w-xs rounded-lg border bg-card/90 px-3 py-2 text-[11px] shadow backdrop-blur">
-          <strong>Canvas preview</strong>
-          <span className="text-muted-foreground ml-1">
-            tldraw editing, realtime cursors, and persistence come next.
-          </span>
-        </div>
-      </Card>
+          </aside>
+        )}
+      </div>
     </div>
   );
 }

@@ -16,6 +16,6 @@ export default defineConfig({
   build: {
     // The shared shell includes auth, query, routing, and motion runtimes.
     // Feature pages are route-split and remain small.
-    chunkSizeWarningLimit: 750,
+    chunkSizeWarningLimit: 3500,
   },
 })

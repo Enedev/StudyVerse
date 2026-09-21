@@ -80,12 +80,12 @@ Implemented:
 - Public and protected route architecture
 - Responsive product shell and initial design system
 - Interactive 3D storybook with physical page-turn navigation
-- Responsive interface previews for tasks, calendar, whiteboards, library,
-  documents, reader, and settings
 - Authenticated task, subtask, and calendar event CRUD through NestJS and RLS
+- Persistent tldraw whiteboards with owner, editor, and viewer roles
+- Personal library with covers, progress, and favorites
+- Private PDF upload, reading, search, notes, and bookmarks
 - Secure NestJS foundation, health endpoint, and current-profile endpoint
 - Initial relational schema, indexes, triggers, RLS, and Storage policies
 
-Tasks and the monthly calendar use persisted user-owned data. Whiteboards,
-library, and document previews remain explicitly labeled until their tldraw,
-PDF.js, upload, and realtime phases are implemented.
+Tasks, calendar, whiteboards, library, and documents now persist user-owned
+data. Live collaborator cursors remain a later realtime phase.

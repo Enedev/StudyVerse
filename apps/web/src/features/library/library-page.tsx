@@ -1,77 +1,100 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AlertCircle,
   BookOpen,
-  Grid2X2,
   Heart,
-  List,
+  LoaderCircle,
   Plus,
   Search,
-  SlidersHorizontal,
+  Trash2,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/workspace/page-header';
-import { PreviewNotice } from '@/components/workspace/preview-notice';
-import { cn } from '@/lib/utils';
+import { useAuth } from '@/features/auth/use-auth';
+import { uploadPrivateFile } from '@/lib/storage';
 
-const books = [
-  {
-    id: 'the-living-world',
-    title: 'The Living World',
-    author: 'Elena Marín',
-    category: 'Biology',
-    progress: 68,
-    cover: 'from-emerald-700 via-teal-700 to-slate-900',
-    mark: 'BIO',
-  },
-  {
-    id: 'ways-of-knowing',
-    title: 'Ways of Knowing',
-    author: 'Thomas Bell',
-    category: 'Philosophy',
-    progress: 34,
-    cover: 'from-indigo-700 via-violet-700 to-slate-900',
-    mark: 'PHI',
-  },
-  {
-    id: 'visual-thinking',
-    title: 'Visual Thinking',
-    author: 'Mira Chen',
-    category: 'Design',
-    progress: 12,
-    cover: 'from-amber-600 via-orange-700 to-stone-900',
-    mark: 'VIS',
-  },
-  {
-    id: 'a-brief-history',
-    title: 'A Brief History of Ideas',
-    author: 'Jonas Reed',
-    category: 'History',
-    progress: 81,
-    cover: 'from-rose-700 via-red-800 to-stone-950',
-    mark: 'HIS',
-  },
+import { createBook, deleteBook, listBooks, setBookFavorite } from './library-api';
+import type { Book } from './library-types';
+
+const emptyBooks: Book[] = [];
+const covers = [
+  'from-emerald-700 to-slate-900',
+  'from-indigo-700 to-slate-900',
+  'from-amber-700 to-stone-900',
+  'from-rose-700 to-stone-950',
 ];
 
-const categories = ['All', 'Biology', 'Philosophy', 'Design', 'History'];
+function coverClass(title: string) {
+  const index = [...title].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return covers[index % covers.length];
+}
 
 export function LibraryPage() {
-  const [category, setCategory] = useState('All');
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [categories, setCategories] = useState('');
+  const [cover, setCover] = useState<File | null>(null);
+  const queryClient = useQueryClient();
+  const booksQuery = useQuery({
+    queryKey: ['books', search, category],
+    queryFn: () => listBooks(search, category),
+  });
+  const createMutation = useMutation({
+    mutationFn: createBook,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['books'] }),
+  });
+  const favoriteMutation = useMutation({
+    mutationFn: ({ book, favorite }: { book: Book; favorite: boolean }) =>
+      setBookFavorite(book.id, favorite),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['books'] }),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: deleteBook,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['books'] }),
+  });
+  const books = booksQuery.data ?? emptyBooks;
+  const availableCategories = useMemo(
+    () => [...new Set(books.flatMap((book) => book.categories))].sort(),
+    [books],
+  );
 
-  const filteredBooks = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return books.filter(
-      (book) =>
-        (category === 'All' || book.category === category) &&
-        (!query ||
-          book.title.toLowerCase().includes(query) ||
-          book.author.toLowerCase().includes(query)),
-    );
-  }, [category, search]);
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!user) return;
+    try {
+      let coverPath: string | undefined;
+      if (cover) {
+        const extension = cover.name.split('.').pop()?.toLowerCase() || 'jpg';
+        coverPath = `${user.id}/${crypto.randomUUID()}.${extension}`;
+        await uploadPrivateFile('book-covers', coverPath, cover);
+      }
+      await createMutation.mutateAsync({
+        title: title.trim(),
+        author: author.trim(),
+        categories: categories
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+        coverPath,
+      });
+      setTitle('');
+      setAuthor('');
+      setCategories('');
+      setCover(null);
+      toast.success('Book added to your library.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to add book.');
+    }
+  };
 
   return (
     <div className="space-y-7">
@@ -79,142 +102,79 @@ export function LibraryPage() {
         icon={BookOpen}
         eyebrow="Your knowledge, collected"
         title="Library"
-        description="Keep books and long-form readings together, remember where you stopped, and return to what matters."
-        action={
-          <Button disabled title="Uploads arrive with Storage integration">
-            <Plus />
-            Add book
-          </Button>
-        }
+        description="Keep the books you are studying, remember your progress, and return to the page where you left off."
       />
 
-      <PreviewNotice>
-        This collection uses example metadata to demonstrate search, categories,
-        reading progress, and detail pages. Uploads will use private Supabase
-        Storage.
-      </PreviewNotice>
-
-      <Card className="bg-primary text-primary-foreground relative overflow-hidden border-0 p-6 sm:p-8">
-        <div className="absolute -top-20 -right-8 size-56 rounded-full border border-white/10" />
-        <div className="relative grid items-center gap-6 md:grid-cols-[1fr_auto]">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.18em] text-white/55 uppercase">
-              Continue reading
-            </p>
-            <h3 className="mt-3 font-serif text-3xl font-medium">
-              The Living World
-            </h3>
-            <p className="mt-2 text-sm text-white/60">
-              Chapter 8 · Cellular energy
-            </p>
-            <div className="mt-5 h-1.5 max-w-md overflow-hidden rounded-full bg-white/15">
-              <div className="bg-accent h-full w-[68%] rounded-full" />
-            </div>
-            <p className="mt-2 text-[11px] text-white/50">68% complete</p>
-          </div>
-          <Button
-            className="bg-white text-slate-900 hover:bg-white/90"
-            asChild
-          >
-            <Link to="/library/the-living-world">Open book</Link>
+      <Card className="p-5">
+        <form className="grid gap-3 lg:grid-cols-[1.2fr_1fr_1fr_auto_auto]" onSubmit={(event) => void submit(event)}>
+          <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title" required maxLength={240} />
+          <Input value={author} onChange={(event) => setAuthor(event.target.value)} placeholder="Author" maxLength={180} />
+          <Input value={categories} onChange={(event) => setCategories(event.target.value)} placeholder="Categories, separated by commas" />
+          <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setCover(event.target.files?.[0] ?? null)} />
+          <Button disabled={createMutation.isPending || !title.trim()}>
+            {createMutation.isPending ? <LoaderCircle className="animate-spin" /> : <Plus />}
+            Add
           </Button>
-        </div>
+        </form>
       </Card>
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex gap-1 overflow-x-auto">
-          {categories.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={cn(
-                'shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition-colors',
-                category === item
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted',
-              )}
-              onClick={() => setCategory(item)}
-            >
-              {item}
-            </button>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+          <Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search title or author" />
+        </div>
+        <select className="border-input bg-background h-11 rounded-lg border px-3 text-sm" value={category} onChange={(event) => setCategory(event.target.value)}>
+          <option value="">All categories</option>
+          {availableCategories.map((item) => (
+            <option key={item} value={item}>{item}</option>
           ))}
-        </div>
-        <div className="flex gap-2">
-          <div className="relative min-w-0 flex-1 sm:w-64">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <Input
-              className="h-9 pl-9"
-              placeholder="Search preview library"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
-          <Button variant="outline" size="icon" disabled>
-            <SlidersHorizontal />
-          </Button>
-          <Button variant="outline" size="icon" aria-label="Grid view">
-            <Grid2X2 />
-          </Button>
-          <Button variant="ghost" size="icon" disabled aria-label="List view">
-            <List />
-          </Button>
-        </div>
+        </select>
       </div>
 
-      {filteredBooks.length > 0 ? (
+      {booksQuery.isLoading ? (
+        <div className="text-muted-foreground flex justify-center gap-2 py-16"><LoaderCircle className="animate-spin" />Loading library…</div>
+      ) : booksQuery.isError ? (
+        <Card className="p-10 text-center">
+          <AlertCircle className="text-destructive mx-auto size-6" />
+          <p className="mt-3 text-sm">Run migrations 001 through 005, then refresh.</p>
+        </Card>
+      ) : books.length === 0 ? (
+        <Card className="border-dashed p-12 text-center shadow-none">
+          <BookOpen className="text-muted-foreground mx-auto size-6" />
+          <h2 className="mt-4 font-semibold">Your shelf is empty</h2>
+          <p className="text-muted-foreground mt-2 text-sm">Add the first book you want to keep close.</p>
+        </Card>
+      ) : (
         <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-          {filteredBooks.map((book) => (
-            <Link
-              key={book.id}
-              to={`/library/${book.id}`}
-              className="group min-w-0"
-            >
-              <div
-                className={`relative aspect-[3/4] overflow-hidden rounded-r-xl rounded-l-md bg-gradient-to-br ${book.cover} p-5 text-white shadow-lg transition-all group-hover:-translate-y-1 group-hover:shadow-xl`}
-              >
-                <div className="absolute inset-y-0 left-3 w-px bg-white/15 shadow-[2px_0_4px_rgba(0,0,0,0.2)]" />
-                <div className="flex h-full flex-col pl-2">
-                  <span className="text-[10px] font-semibold tracking-[0.2em] text-white/50">
-                    {book.mark}
-                  </span>
-                  <strong className="mt-auto font-serif text-xl leading-tight font-medium sm:text-2xl">
-                    {book.title}
-                  </strong>
-                  <span className="mt-3 text-[10px] text-white/55">
-                    {book.author}
-                  </span>
+          {books.map((book) => (
+            <Card key={book.id} className="overflow-hidden">
+              <Link to={`/library/${book.id}`} className={`bg-gradient-to-br ${coverClass(book.title)} block aspect-[3/4] p-5 text-white`}>
+                <strong className="font-serif text-2xl leading-tight">{book.title}</strong>
+                <span className="mt-3 block text-xs text-white/70">{book.author ?? 'Unknown author'}</span>
+              </Link>
+              <div className="space-y-3 p-3">
+                <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                  <div className="bg-primary h-full" style={{ width: `${book.readingProgress}%` }} />
                 </div>
-                <span className="absolute top-3 right-3 flex size-8 items-center justify-center rounded-full bg-black/15 text-white/75 backdrop-blur">
-                  <Heart className="size-3.5" />
-                </span>
-              </div>
-              <div className="px-1 pt-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground truncate text-xs">
-                    {book.category}
-                  </span>
-                  <span className="text-muted-foreground text-[10px]">
-                    {book.progress}%
-                  </span>
-                </div>
-                <div className="bg-muted mt-2 h-1 overflow-hidden rounded-full">
-                  <div
-                    className="bg-primary h-full rounded-full"
-                    style={{ width: `${book.progress}%` }}
-                  />
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">{book.readingProgress}%</span>
+                  <div>
+                    <Button variant="ghost" size="icon" aria-label="Toggle favorite" onClick={() => favoriteMutation.mutate({ book, favorite: !book.isFavorite })}>
+                      <Heart className={book.isFavorite ? 'fill-rose-500 text-rose-500' : ''} />
+                    </Button>
+                    <Button variant="ghost" size="icon" aria-label="Delete book" onClick={() => {
+                      if (window.confirm(`Delete "${book.title}"?`)) {
+                        deleteMutation.mutate(book.id);
+                      }
+                    }}>
+                      <Trash2 />
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </Link>
+            </Card>
           ))}
         </section>
-      ) : (
-        <Card className="p-12 text-center">
-          <Search className="text-muted-foreground mx-auto size-6" />
-          <h3 className="mt-4 text-sm font-semibold">No books found</h3>
-          <p className="text-muted-foreground mt-1 text-xs">
-            Try another category or search term.
-          </p>
-        </Card>
       )}
     </div>
   );

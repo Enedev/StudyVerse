@@ -23,13 +23,16 @@
     "framer-motion": "^12.23.22",
     "lucide-react": "^0.544.0",
     "next-themes": "^0.4.6",
+    "pdfjs-dist": "^6.3.289",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.63.0",
     "react-pageflip": "2.0.3",
+    "react-pdf": "^11.0.0",
     "react-router-dom": "^7.9.3",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
+    "tldraw": "^5.4.2",
     "zod": "^4.1.11"
   },
   "devDependencies": {
