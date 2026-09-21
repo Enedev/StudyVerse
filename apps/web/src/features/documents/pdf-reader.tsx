@@ -10,7 +10,7 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { toast } from 'sonner';
@@ -26,6 +26,7 @@ import {
   listAnnotations,
   updateDocument,
 } from './documents-api';
+import { PdfMarkup } from './pdf-markup';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -89,6 +90,7 @@ export function PdfReader({
   const [pageOverride, setPage] = useState<number | null>(null);
   const [pageCount, setPageCount] = useState(0);
   const [renderedPages, setRenderedPages] = useState(0);
+  const [revealed, setRevealed] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [query, setQuery] = useState('');
   const [highlight, setHighlight] = useState('');
@@ -108,7 +110,9 @@ export function PdfReader({
   const documentRecord = documentQuery.data;
   const page = pageOverride ?? documentRecord?.lastOpenedPage ?? 1;
   const storagePath = documentRecord?.storagePath;
-  const ready = pageCount > 0 && renderedPages >= pageCount;
+  if (!revealed && pageCount > 0 && renderedPages >= pageCount) {
+    setRevealed(true);
+  }
 
   useEffect(() => {
     if (!storagePath) return;
@@ -141,7 +145,7 @@ export function PdfReader({
     if (!highlight) return;
     const mark = document.querySelector('.pdf-stage mark');
     mark?.scrollIntoView({ block: 'center', inline: 'nearest' });
-  }, [highlight, page, ready]);
+  }, [highlight, page, revealed]);
 
   const noteMutation = useMutation({
     mutationFn: () =>
@@ -291,8 +295,8 @@ export function PdfReader({
           )}
         </aside>
         <main className="pdf-stage bg-muted/40 relative min-h-0 overflow-auto p-6">
-          {!ready && (
-            <div className="bg-background/80 absolute inset-0 z-10 flex flex-col items-center justify-center gap-3">
+          {!revealed && (
+            <div className="bg-background absolute inset-0 z-30 flex flex-col items-center justify-center gap-3">
               <LoaderCircle className="animate-spin" />
               <p className="text-sm">
                 {pageCount === 0
@@ -302,34 +306,48 @@ export function PdfReader({
             </div>
           )}
           {fileUrl && (
-            <Document
-              file={fileUrl}
-              loading=""
-              onLoadSuccess={(pdf) => {
-                pdfRef.current = pdf;
-                setPageCount(pdf.numPages);
-                setPage((current) => Math.min(current ?? page, pdf.numPages));
-              }}
-            >
-              {Array.from({ length: pageCount }, (_, index) => {
-                const pageNumber = index + 1;
-                return (
-                  <div
-                    key={pageNumber}
-                    className={pageNumber === page ? 'block' : 'pointer-events-none fixed -left-[10000px] top-0'}
-                  >
-                    <Page
-                      pageNumber={pageNumber}
-                      scale={zoom}
-                      className="mx-auto shadow-xl"
-                      loading=""
-                      customTextRenderer={({ str }) => highlightText(str, highlight)}
-                      onRenderSuccess={() => markRendered(pageNumber)}
-                    />
-                  </div>
-                );
-              })}
-            </Document>
+            <Suspense fallback={null}>
+              <Document
+                file={fileUrl}
+                loading=""
+                onLoadSuccess={(pdf) => {
+                  pdfRef.current = pdf;
+                  setPageCount(pdf.numPages);
+                  setPage((current) => Math.min(current ?? page, pdf.numPages));
+                }}
+              >
+                {Array.from({ length: pageCount }, (_, index) => {
+                  const pageNumber = index + 1;
+                  const visible = pageNumber === page;
+                  return (
+                    <div
+                      key={pageNumber}
+                      className={
+                        visible
+                          ? 'relative mx-auto w-fit'
+                          : 'pointer-events-none fixed -left-[10000px] top-0'
+                      }
+                    >
+                      <Page
+                        pageNumber={pageNumber}
+                        scale={zoom}
+                        className="shadow-xl"
+                        loading=""
+                        customTextRenderer={({ str }) => highlightText(str, highlight)}
+                        onRenderSuccess={() => markRendered(pageNumber)}
+                      />
+                      {visible && revealed && (
+                        <PdfMarkup
+                          documentId={documentId}
+                          pageNumber={pageNumber}
+                          annotations={annotations}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </Document>
+            </Suspense>
           )}
         </main>
         <aside className="bg-card min-h-0 overflow-y-auto border-l p-4">

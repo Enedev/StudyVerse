@@ -4,6 +4,7 @@ import {
   FileText,
   LayoutDashboard,
   ListTodo,
+  NotebookPen,
   Settings,
   Shapes,
   type LucideIcon,
@@ -20,6 +21,7 @@ export const navigationItems: NavigationItem[] = [
   { label: 'Tasks', href: '/tasks', icon: ListTodo },
   { label: 'Calendar', href: '/calendar', icon: CalendarDays },
   { label: 'Whiteboards', href: '/whiteboards', icon: Shapes },
+  { label: 'Notebooks', href: '/notebooks', icon: NotebookPen },
   { label: 'Library', href: '/library', icon: BookOpen },
   { label: 'Documents', href: '/documents', icon: FileText },
 ];

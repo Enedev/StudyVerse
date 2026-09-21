@@ -194,6 +194,30 @@ export function DocumentPreview() {
   );
 }
 
+export function NotebookPreview() {
+  return (
+    <div className="page-visual">
+      <div className="library-heading">
+        <div>
+          <span className="page-kicker">Notebook</span>
+          <h3>A page you can write or draw</h3>
+        </div>
+      </div>
+      <div
+        className="rounded-xl border bg-[#fffdf8] p-4 text-sm leading-8"
+        style={{
+          backgroundImage:
+            'linear-gradient(transparent 31px, rgba(180, 160, 130, 0.55) 32px)',
+          backgroundSize: '100% 32px',
+          minHeight: '14rem',
+        }}
+      >
+        Lecture notes, sketches, and the question you want to ask next.
+      </div>
+    </div>
+  );
+}
+
 export function LibraryPreview() {
   return (
     <div className="page-visual page-visual--library">

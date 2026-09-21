@@ -46,9 +46,11 @@ export function listAnnotations(documentId: string) {
 export function createAnnotation(
   documentId: string,
   input: {
-    annotationType: 'note' | 'bookmark';
+    annotationType: 'note' | 'bookmark' | 'drawing' | 'highlight' | 'text';
     pageNumber: number;
     content?: string;
+    color?: string;
+    geometry?: Record<string, unknown>;
   },
 ) {
   return apiFetch<DocumentAnnotation>(`/documents/${documentId}/annotations`, {

@@ -8,7 +8,7 @@ import {
   Search,
   Trash2,
 } from 'lucide-react';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -17,7 +17,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/workspace/page-header';
 import { useAuth } from '@/features/auth/use-auth';
-import { uploadPrivateFile } from '@/lib/storage';
+import { createSignedFileUrl, uploadPrivateFile } from '@/lib/storage';
 
 import { createDocument, deleteDocument } from '@/features/documents/documents-api';
 
@@ -31,6 +31,47 @@ const covers = [
   'from-amber-700 to-stone-900',
   'from-rose-700 to-stone-950',
 ];
+
+function coverMime(file: File) {
+  if (file.type === 'image/png' || file.type === 'image/webp' || file.type === 'image/jpeg') {
+    return file.type;
+  }
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  if (extension === 'png') return 'image/png';
+  if (extension === 'webp') return 'image/webp';
+  return 'image/jpeg';
+}
+
+function BookCover({ book }: { book: Book }) {
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!book.coverPath) return;
+    let active = true;
+    void createSignedFileUrl('book-covers', book.coverPath)
+      .then((url) => {
+        if (active) setCoverUrl(url);
+      })
+      .catch(() => {
+        if (active) setCoverUrl(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [book.coverPath]);
+
+  return (
+    <div className={`relative block aspect-[3/4] overflow-hidden bg-gradient-to-br ${coverClass(book.title)} text-white`}>
+      {coverUrl && (
+        <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      )}
+      <div className="relative flex h-full flex-col justify-end bg-gradient-to-t from-black/70 to-transparent p-5">
+        <strong className="font-serif text-2xl leading-tight">{book.title}</strong>
+        <span className="mt-2 block text-xs text-white/80">{book.author ?? 'Unknown author'}</span>
+      </div>
+    </div>
+  );
+}
 
 function coverClass(title: string) {
   const index = [...title].reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -94,7 +135,7 @@ export function LibraryPage() {
       if (cover) {
         const extension = cover.name.split('.').pop()?.toLowerCase() || 'jpg';
         coverPath = `${user.id}/${crypto.randomUUID()}.${extension}`;
-        await uploadPrivateFile('book-covers', coverPath, cover);
+        await uploadPrivateFile('book-covers', coverPath, cover, coverMime(cover));
       }
       await createMutation.mutateAsync({
         title: title.trim(),
@@ -176,9 +217,8 @@ export function LibraryPage() {
         <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
           {books.map((book) => (
             <Card key={book.id} className="overflow-hidden">
-              <Link to={`/library/${book.id}`} className={`bg-gradient-to-br ${coverClass(book.title)} block aspect-[3/4] p-5 text-white`}>
-                <strong className="font-serif text-2xl leading-tight">{book.title}</strong>
-                <span className="mt-3 block text-xs text-white/70">{book.author ?? 'Unknown author'}</span>
+              <Link to={`/library/${book.id}`}>
+                <BookCover book={book} />
               </Link>
               <div className="space-y-3 p-3">
                 <div className="bg-muted h-1.5 overflow-hidden rounded-full">

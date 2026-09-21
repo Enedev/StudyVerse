@@ -44,6 +44,7 @@ describe('Health endpoint (e2e)', () => {
     await request(app.getHttpServer()).get('/api/v1/whiteboards').expect(401);
     await request(app.getHttpServer()).get('/api/v1/books').expect(401);
     await request(app.getHttpServer()).get('/api/v1/documents').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/notebooks').expect(401);
   });
 
   afterEach(async () => {

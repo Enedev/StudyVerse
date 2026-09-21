@@ -7,6 +7,7 @@ import {
   FilePenLine,
   ListChecks,
   MousePointer2,
+  NotebookPen,
   Shapes,
   type LucideIcon,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ import {
   CalendarPreview,
   DocumentPreview,
   LibraryPreview,
+  NotebookPreview,
   TaskPreview,
   WhiteboardPreview,
 } from '@/features/welcome/storybook/feature-visuals';
@@ -90,6 +92,15 @@ const chapters: Chapter[] = [
       'Build a personal library that remembers what matters, where you paused, and what you want to revisit.',
     route: '/library',
     icon: BookMarked,
+  },
+  {
+    label: 'Chapter six',
+    shortTitle: 'Notebooks',
+    title: 'Keep a notebook beside you.',
+    description:
+      'Choose lined, grid, dotted, or blank paper. Write on the page, or turn it over and draw.',
+    route: '/notebooks',
+    icon: NotebookPen,
   },
 ];
 
@@ -240,6 +251,13 @@ export function InteractiveStorybook() {
           </BookPage>
           <BookPage side="right" pageNumber={10} tone="ink">
             <LibraryPreview />
+          </BookPage>
+
+          <BookPage side="left" pageNumber={11} tone="sage">
+            <ChapterPage chapter={chapters[5]} />
+          </BookPage>
+          <BookPage side="right" pageNumber={12} tone="sage">
+            <NotebookPreview />
           </BookPage>
         </HTMLFlipBook>
         <div className="book-stage__spine" aria-hidden="true" />

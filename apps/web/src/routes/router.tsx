@@ -59,6 +59,16 @@ const WhiteboardDetailPage = lazy(() =>
     default: module.WhiteboardDetailPage,
   })),
 );
+const NotebooksPage = lazy(() =>
+  import('@/features/notebooks/notebooks-page').then((module) => ({
+    default: module.NotebooksPage,
+  })),
+);
+const NotebookDetailPage = lazy(() =>
+  import('@/features/notebooks/notebook-detail-page').then((module) => ({
+    default: module.NotebookDetailPage,
+  })),
+);
 const LibraryPage = lazy(() =>
   import('@/features/library/library-page').then((module) => ({
     default: module.LibraryPage,
@@ -121,6 +131,11 @@ export const router = createBrowserRouter([
           {
             path: '/whiteboards/:id',
             element: lazyPage(<WhiteboardDetailPage />),
+          },
+          { path: '/notebooks', element: lazyPage(<NotebooksPage />) },
+          {
+            path: '/notebooks/:id',
+            element: lazyPage(<NotebookDetailPage />),
           },
           { path: '/library', element: lazyPage(<LibraryPage />) },
           {

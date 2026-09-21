@@ -1,12 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import { Excalidraw } from '@excalidraw/excalidraw';
+import {
+  CaptureUpdateAction,
+  Excalidraw,
+  reconcileElements,
+} from '@excalidraw/excalidraw';
+import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import { ArrowLeft, LoaderCircle, Trash2, UserPlus } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/features/auth/use-auth';
+import { supabase } from '@/lib/supabase/client';
 
 import '@excalidraw/excalidraw/index.css';
 
@@ -16,14 +23,17 @@ import {
   removeWhiteboardMember,
   saveWhiteboard,
 } from './whiteboards-api';
+import type { WhiteboardDetail } from './whiteboard-types';
+
+type SceneElement = { id: string; version: number };
 
 type CanvasSnapshot = {
-  elements?: readonly unknown[];
+  elements?: readonly SceneElement[];
   appState?: Record<string, unknown>;
   files?: Record<string, unknown>;
 };
 
-function sceneSignature(elements: readonly { id: string; version: number }[]) {
+function sceneSignature(elements: readonly SceneElement[]) {
   return elements.map((element) => `${element.id}:${element.version}`).join('|');
 }
 
@@ -37,44 +47,29 @@ function initialScene(snapshot: Record<string, unknown>) {
   };
 }
 
-export function WhiteboardDetailPage() {
-  const { id = '' } = useParams();
-  const boardQuery = useQuery({
-    queryKey: ['whiteboard', id],
-    queryFn: () => getWhiteboard(id),
-    enabled: Boolean(id),
-    refetchOnWindowFocus: false,
-  });
+function WhiteboardCanvas({ board }: { board: WhiteboardDetail }) {
+  const { user } = useAuth();
   const [saveState, setSaveState] = useState<'Saved' | 'Saving' | 'Unsaved'>(
     'Saved',
   );
+  const [peers, setPeers] = useState(1);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'editor' | 'viewer'>('editor');
+  const apiRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const saveTimer = useRef<number | null>(null);
   const opened = useRef(false);
+  const applyingRemote = useRef(false);
   const lastSignature = useRef('');
   const pendingSnapshot = useRef<Record<string, unknown> | null>(null);
-  const board = boardQuery.data;
-  const boardId = board?.id;
-  const initialData = useMemo(() => {
-    if (!board) return null;
-    return initialScene(board.snapshot);
-    // Reload the stored scene only when opening a different board.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [boardId]);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const scene = initialScene(board.snapshot);
 
-  useEffect(() => {
-    opened.current = false;
-    lastSignature.current = '';
-    pendingSnapshot.current = null;
-  }, [id]);
-
-  const persist = (whiteboardId: string) => {
+  const persist = () => {
     const snapshot = pendingSnapshot.current;
-    if (!snapshot) return;
+    if (!snapshot || board.role === 'viewer') return;
     pendingSnapshot.current = null;
     setSaveState('Saving');
-    void saveWhiteboard(whiteboardId, { snapshot })
+    void saveWhiteboard(board.id, { snapshot })
       .then(() => setSaveState('Saved'))
       .catch((error: unknown) => {
         pendingSnapshot.current = snapshot;
@@ -83,6 +78,36 @@ export function WhiteboardDetailPage() {
           error instanceof Error ? error.message : 'Unable to save the canvas.',
         );
       });
+  };
+
+  const applyRemote = (remoteElements: readonly SceneElement[]) => {
+    const api = apiRef.current;
+    if (!api || applyingRemote.current) return;
+    const localElements = api.getSceneElements() as readonly SceneElement[];
+    const merged = reconcileElements(
+      api.getSceneElements(),
+      remoteElements as never,
+      api.getAppState(),
+    );
+    const mergedSignature = sceneSignature(merged);
+    if (mergedSignature === sceneSignature(localElements)) return;
+    applyingRemote.current = true;
+    api.updateScene({
+      elements: merged,
+      captureUpdate: CaptureUpdateAction.NEVER,
+    });
+    applyingRemote.current = false;
+    lastSignature.current = mergedSignature;
+    const remoteSignature = sceneSignature(remoteElements);
+    if (mergedSignature !== remoteSignature && board.role !== 'viewer') {
+      pendingSnapshot.current = {
+        elements: merged,
+        files: api.getFiles(),
+        appState: { viewBackgroundColor: api.getAppState().viewBackgroundColor },
+      };
+      if (saveTimer.current) window.clearTimeout(saveTimer.current);
+      saveTimer.current = window.setTimeout(persist, 800);
+    }
   };
 
   useEffect(() => {
@@ -94,7 +119,7 @@ export function WhiteboardDetailPage() {
     };
     const flush = () => {
       if (saveTimer.current) window.clearTimeout(saveTimer.current);
-      if (board?.role !== 'viewer') persist(id);
+      persist();
     };
     window.addEventListener('keydown', blockLocalSave, true);
     window.addEventListener('pagehide', flush);
@@ -103,14 +128,50 @@ export function WhiteboardDetailPage() {
       window.removeEventListener('pagehide', flush);
       flush();
     };
-  }, [board?.role, id]);
+  }, [board.id, board.role]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      void getWhiteboard(board.id)
+        .then((remote) => {
+          const remoteScene = initialScene(remote.snapshot);
+          if (remoteScene?.elements) applyRemote(remoteScene.elements);
+        })
+        .catch(() => undefined);
+    }, 2000);
+    return () => window.clearInterval(timer);
+  }, [board.id, board.role]);
+
+  useEffect(() => {
+    const channel = supabase.channel(`whiteboard:${board.id}`, {
+      config: { broadcast: { self: false }, presence: { key: user?.id ?? board.id } },
+    });
+    channelRef.current = channel;
+    channel
+      .on('broadcast', { event: 'elements' }, ({ payload }) => {
+        const elements = (payload as { elements?: readonly SceneElement[] }).elements;
+        if (elements) applyRemote(elements);
+      })
+      .on('presence', { event: 'sync' }, () => {
+        setPeers(Object.keys(channel.presenceState()).length || 1);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ userId: user?.id ?? 'guest' });
+        }
+      });
+    return () => {
+      channelRef.current = null;
+      void supabase.removeChannel(channel);
+    };
+  }, [board.id, user?.id]);
 
   const scheduleSave = (
-    elements: readonly { id: string; version: number }[],
+    elements: readonly SceneElement[],
     appState: { viewBackgroundColor: string },
     files: Record<string, unknown>,
   ) => {
-    if (board?.role === 'viewer') return;
+    if (board.role === 'viewer' || applyingRemote.current) return;
     const signature = sceneSignature(elements);
     if (!opened.current) {
       opened.current = true;
@@ -125,40 +186,24 @@ export function WhiteboardDetailPage() {
       appState: { viewBackgroundColor: appState.viewBackgroundColor },
     };
     setSaveState('Unsaved');
+    void channelRef.current?.send({
+      type: 'broadcast',
+      event: 'elements',
+      payload: { elements },
+    });
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => persist(id), 800);
+    saveTimer.current = window.setTimeout(persist, 500);
   };
 
   const invite = async () => {
     try {
-      await inviteWhiteboardMember(id, email.trim(), role);
+      await inviteWhiteboardMember(board.id, email.trim(), role);
       setEmail('');
-      await boardQuery.refetch();
-      toast.success('Collaborator invited.');
+      toast.success('Collaborator invited. They can open this board and draw with you.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to invite.');
     }
   };
-
-  if (boardQuery.isLoading) {
-    return (
-      <div className="text-muted-foreground flex h-[70vh] items-center justify-center gap-2">
-        <LoaderCircle className="animate-spin" />
-        Opening canvas…
-      </div>
-    );
-  }
-
-  if (boardQuery.isError || !board) {
-    return (
-      <div className="py-20 text-center">
-        <h1 className="font-serif text-3xl">This whiteboard is unavailable</h1>
-        <Button className="mt-5" asChild>
-          <Link to="/whiteboards">Back to whiteboards</Link>
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="-m-5 flex h-[calc(100vh-4.5rem)] min-h-[42rem] flex-col sm:-m-7 lg:-m-10">
@@ -172,6 +217,8 @@ export function WhiteboardDetailPage() {
           <h1 className="truncate text-sm font-semibold">{board.title}</h1>
           <p className="text-muted-foreground text-xs capitalize">
             {board.role} · {saveState === 'Saved' ? 'Saved to your account' : saveState}
+            {' · '}
+            {peers} here now
           </p>
         </div>
         {board.role === 'owner' && (
@@ -204,10 +251,10 @@ export function WhiteboardDetailPage() {
       <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_16rem]">
         <div className="h-full min-h-0">
           <Excalidraw
-            key={board.id}
-            initialData={
-              initialData as ComponentProps<typeof Excalidraw>['initialData']
-            }
+            excalidrawAPI={(api) => {
+              apiRef.current = api;
+            }}
+            initialData={scene as ComponentProps<typeof Excalidraw>['initialData']}
             viewModeEnabled={board.role === 'viewer'}
             UIOptions={{
               canvasActions: {
@@ -226,8 +273,8 @@ export function WhiteboardDetailPage() {
           <aside className="bg-card hidden overflow-y-auto border-l p-4 lg:block">
             <h2 className="text-sm font-semibold">Collaborators</h2>
             <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-              Changes are stored in your StudyVerse account. Live cursors come
-              in a later sync phase.
+              People with access see the same canvas within a couple of seconds.
+              Invite them with an account email.
             </p>
             <div className="mt-4 space-y-2">
               {board.members.length === 0 ? (
@@ -241,9 +288,7 @@ export function WhiteboardDetailPage() {
                     className="flex items-center justify-between gap-2 rounded-lg border p-2"
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-mono text-[10px]">
-                        {member.userId}
-                      </p>
+                      <p className="truncate font-mono text-[10px]">{member.userId}</p>
                       <p className="text-muted-foreground text-[10px] capitalize">
                         {member.role}
                       </p>
@@ -253,8 +298,8 @@ export function WhiteboardDetailPage() {
                       size="icon"
                       aria-label="Remove collaborator"
                       onClick={() =>
-                        void removeWhiteboardMember(id, member.userId).then(() =>
-                          boardQuery.refetch(),
+                        void removeWhiteboardMember(board.id, member.userId).then(
+                          () => toast.success('Collaborator removed.'),
                         )
                       }
                     >
@@ -269,4 +314,37 @@ export function WhiteboardDetailPage() {
       </div>
     </div>
   );
+}
+
+export function WhiteboardDetailPage() {
+  const { id = '' } = useParams();
+  const boardQuery = useQuery({
+    queryKey: ['whiteboard', id],
+    queryFn: () => getWhiteboard(id),
+    enabled: Boolean(id),
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+  });
+
+  if (boardQuery.isError) {
+    return (
+      <div className="py-20 text-center">
+        <h1 className="font-serif text-3xl">This whiteboard is unavailable</h1>
+        <Button className="mt-5" asChild>
+          <Link to="/whiteboards">Back to whiteboards</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (!boardQuery.isFetchedAfterMount || !boardQuery.data) {
+    return (
+      <div className="text-muted-foreground flex h-[70vh] items-center justify-center gap-2">
+        <LoaderCircle className="animate-spin" />
+        Opening the saved canvas…
+      </div>
+    );
+  }
+
+  return <WhiteboardCanvas key={boardQuery.data.id} board={boardQuery.data} />;
 }

@@ -2,7 +2,9 @@ import {
   ArrowRight,
   BookOpen,
   CalendarDays,
+  FileText,
   ListTodo,
+  NotebookPen,
   Shapes,
   Sparkles,
 } from 'lucide-react';
@@ -33,10 +35,22 @@ const spaces = [
     icon: Shapes,
   },
   {
+    title: 'Notebooks',
+    description: 'Write and draw on paper',
+    href: '/notebooks',
+    icon: NotebookPen,
+  },
+  {
     title: 'Library',
     description: 'Gather what inspires you',
     href: '/library',
     icon: BookOpen,
+  },
+  {
+    title: 'Documents',
+    description: 'Read and mark up PDFs',
+    href: '/documents',
+    icon: FileText,
   },
 ];
 
@@ -75,7 +89,7 @@ export function DashboardPage() {
             <h2 className="mt-1 text-xl font-semibold">Where will you begin?</h2>
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {spaces.map(({ title, description, href, icon: Icon }) => (
             <Link key={href} to={href}>
               <Card className="group h-full p-5 transition-all hover:-translate-y-1 hover:shadow-md">

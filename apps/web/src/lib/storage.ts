@@ -6,10 +6,11 @@ export async function uploadPrivateFile(
   bucket: PrivateBucket,
   path: string,
   file: File,
+  contentType?: string,
 ) {
   const { error } = await supabase.storage.from(bucket).upload(path, file, {
     upsert: false,
-    contentType: file.type || undefined,
+    contentType: contentType || file.type || undefined,
   });
 
   if (error) {

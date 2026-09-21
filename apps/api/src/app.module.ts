@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { DocumentsModule } from './documents/documents.module.js';
 import { HealthModule } from './health/health.module.js';
 import { LibraryModule } from './library/library.module.js';
+import { NotebooksModule } from './notebooks/notebooks.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
 import { UsersModule } from './users/users.module.js';
 import { WhiteboardsModule } from './whiteboards/whiteboards.module.js';
@@ -26,6 +27,7 @@ import { WhiteboardsModule } from './whiteboards/whiteboards.module.js';
     WhiteboardsModule,
     LibraryModule,
     DocumentsModule,
+    NotebooksModule,
   ],
 })
 export class AppModule {}

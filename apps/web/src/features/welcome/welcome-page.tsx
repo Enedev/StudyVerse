@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   FilePenLine,
   ListChecks,
+  NotebookPen,
   Shapes,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -47,6 +48,13 @@ const chapters = [
     description:
       'Build a personal library that grows alongside your curiosity.',
   },
+  {
+    number: '06',
+    icon: NotebookPen,
+    title: 'Open a notebook and begin.',
+    description:
+      'Pick the paper, write across the lines, or draw when the idea needs more than words.',
+  },
 ];
 
 export function WelcomePage() {
@@ -60,7 +68,7 @@ export function WelcomePage() {
           Open a new chapter in how you learn.
         </h1>
         <p className="text-muted-foreground mx-auto mt-7 max-w-2xl leading-relaxed">
-          Five connected spaces, designed to feel like one calm and intuitive
+          Six connected spaces, designed to feel like one calm and intuitive
           academic home.
         </p>
       </section>
