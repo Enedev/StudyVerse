@@ -32,6 +32,17 @@ describe('Health endpoint (e2e)', () => {
       });
   });
 
+  it('protects task and calendar endpoints', async () => {
+    await request(app.getHttpServer()).get('/api/v1/tasks').expect(401);
+    await request(app.getHttpServer())
+      .get('/api/v1/calendar/events')
+      .query({
+        from: '2026-09-01T00:00:00.000Z',
+        to: '2026-10-01T00:00:00.000Z',
+      })
+      .expect(401);
+  });
+
   afterEach(async () => {
     await app.close();
   });
