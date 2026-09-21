@@ -34,6 +34,11 @@ const ForgotPasswordPage = lazy(() =>
     default: module.ForgotPasswordPage,
   })),
 );
+const AccountConfirmedPage = lazy(() =>
+  import('@/features/auth/account-confirmed-page').then((module) => ({
+    default: module.AccountConfirmedPage,
+  })),
+);
 const DashboardPage = lazy(() =>
   import('@/features/dashboard/dashboard-page').then((module) => ({
     default: module.DashboardPage,
@@ -115,6 +120,10 @@ export const router = createBrowserRouter([
       {
         path: '/forgot-password',
         element: lazyPage(<ForgotPasswordPage />),
+      },
+      {
+        path: '/auth/confirmed',
+        element: lazyPage(<AccountConfirmedPage />),
       },
     ],
   },

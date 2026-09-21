@@ -57,7 +57,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           password,
           options: {
             data: { display_name: displayName },
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/auth/confirmed`,
           },
         });
         if (error) throw error;
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       },
       requestPasswordReset: async (email) => {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/login`,
+          redirectTo: `${window.location.origin}/auth/confirmed`,
         });
         if (error) throw error;
       },

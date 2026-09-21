@@ -29,8 +29,12 @@ After applying them:
 
 1. Restart `pnpm dev` if it is already running.
 2. Register or sign in.
-3. Create a task and calendar event.
-4. Confirm that each user sees only their own records.
+3. In Authentication → URL Configuration, set the Site URL to the deployed
+   app, for example `https://studyverse-zeta.vercel.app`, and add
+   `https://studyverse-zeta.vercel.app/auth/confirmed` to Redirect URLs.
+   Also allow `http://localhost:5173/auth/confirmed` for local sign-up.
+4. Create a task and calendar event.
+5. Confirm that each user sees only their own records.
 
 The web application never uses the Supabase secret key. Authenticated domain
 requests go through NestJS, which forwards the caller's access token so RLS

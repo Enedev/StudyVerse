@@ -45,6 +45,16 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
+  const server = app.getHttpAdapter().getInstance();
+  server.get('/', (request: { originalUrl?: string }, response: { redirect: (code: number, url: string) => void }) => {
+    const destination = new URL('/auth/confirmed', webOrigin);
+    const queryIndex = request.originalUrl?.indexOf('?') ?? -1;
+    if (queryIndex >= 0 && request.originalUrl) {
+      destination.search = request.originalUrl.slice(queryIndex);
+    }
+    response.redirect(302, destination.toString());
+  });
+
   await app.listen(port, '0.0.0.0');
 }
 await bootstrap();
