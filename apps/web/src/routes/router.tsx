@@ -1,16 +1,7 @@
 /* oxlint-disable react/only-export-components -- route-level lazy components belong with the router */
-import {
-  BookOpen,
-  CalendarDays,
-  FileText,
-  ListTodo,
-  Settings,
-  Shapes,
-} from 'lucide-react';
 import { lazy, type ReactNode, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
-import { ModulePlaceholder } from '@/components/feedback/module-placeholder';
 import { PageLoader } from '@/components/feedback/page-loader';
 import { AppLayout } from '@/layouts/app-layout';
 import { AuthLayout } from '@/layouts/auth-layout';
@@ -48,97 +39,55 @@ const DashboardPage = lazy(() =>
     default: module.DashboardPage,
   })),
 );
+const TasksPage = lazy(() =>
+  import('@/features/tasks/tasks-page').then((module) => ({
+    default: module.TasksPage,
+  })),
+);
+const CalendarPage = lazy(() =>
+  import('@/features/calendar/calendar-page').then((module) => ({
+    default: module.CalendarPage,
+  })),
+);
+const WhiteboardsPage = lazy(() =>
+  import('@/features/whiteboards/whiteboards-page').then((module) => ({
+    default: module.WhiteboardsPage,
+  })),
+);
+const WhiteboardDetailPage = lazy(() =>
+  import('@/features/whiteboards/whiteboard-detail-page').then((module) => ({
+    default: module.WhiteboardDetailPage,
+  })),
+);
+const LibraryPage = lazy(() =>
+  import('@/features/library/library-page').then((module) => ({
+    default: module.LibraryPage,
+  })),
+);
+const LibraryDetailPage = lazy(() =>
+  import('@/features/library/library-detail-page').then((module) => ({
+    default: module.LibraryDetailPage,
+  })),
+);
+const DocumentsPage = lazy(() =>
+  import('@/features/documents/documents-page').then((module) => ({
+    default: module.DocumentsPage,
+  })),
+);
+const DocumentDetailPage = lazy(() =>
+  import('@/features/documents/document-detail-page').then((module) => ({
+    default: module.DocumentDetailPage,
+  })),
+);
+const SettingsPage = lazy(() =>
+  import('@/features/settings/settings-page').then((module) => ({
+    default: module.SettingsPage,
+  })),
+);
 
 function lazyPage(page: ReactNode) {
   return <Suspense fallback={<PageLoader />}>{page}</Suspense>;
 }
-
-const modulePages = {
-  tasks: (
-    <ModulePlaceholder
-      icon={ListTodo}
-      eyebrow="Plan"
-      title="Tasks"
-      description="A focused home for assignments, subtasks, priorities, and the small steps that create momentum."
-      plannedFeatures={[
-        'Tasks and subtasks',
-        'Priorities and due dates',
-        'Subjects and tags',
-        'Filters and sorting',
-      ]}
-    />
-  ),
-  calendar: (
-    <ModulePlaceholder
-      icon={CalendarDays}
-      eyebrow="Schedule"
-      title="Calendar"
-      description="A clear view of deadlines, study sessions, and the academic rhythm ahead."
-      plannedFeatures={[
-        'Month, week, and day views',
-        'Events and deadlines',
-        'Recurring events',
-        'Subject colors',
-      ]}
-    />
-  ),
-  whiteboards: (
-    <ModulePlaceholder
-      icon={Shapes}
-      eyebrow="Explore"
-      title="Whiteboards"
-      description="An infinite canvas for visual thinking, explanation, and collaboration powered by tldraw."
-      plannedFeatures={[
-        'Infinite tldraw canvas',
-        'Pages and persistence',
-        'Sharing permissions',
-        'Realtime collaboration',
-      ]}
-    />
-  ),
-  library: (
-    <ModulePlaceholder
-      icon={BookOpen}
-      eyebrow="Collect"
-      title="Library"
-      description="A personal collection of books and readings that remembers where you left off."
-      plannedFeatures={[
-        'Book metadata and covers',
-        'Reading progress',
-        'Favorites',
-        'Search and filters',
-      ]}
-    />
-  ),
-  documents: (
-    <ModulePlaceholder
-      icon={FileText}
-      eyebrow="Read"
-      title="Documents"
-      description="A purposeful PDF reading space for searching, annotating, and learning."
-      plannedFeatures={[
-        'Private PDF uploads',
-        'Page navigation and zoom',
-        'Search and thumbnails',
-        'Annotations and bookmarks',
-      ]}
-    />
-  ),
-  settings: (
-    <ModulePlaceholder
-      icon={Settings}
-      eyebrow="Personalize"
-      title="Settings"
-      description="Manage your profile, preferences, and account security."
-      plannedFeatures={[
-        'Profile details',
-        'Appearance preferences',
-        'Timezone settings',
-        'Account security',
-      ]}
-    />
-  ),
-};
 
 export const router = createBrowserRouter([
   {
@@ -166,15 +115,24 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { path: '/dashboard', element: lazyPage(<DashboardPage />) },
-          { path: '/tasks', element: modulePages.tasks },
-          { path: '/calendar', element: modulePages.calendar },
-          { path: '/whiteboards', element: modulePages.whiteboards },
-          { path: '/whiteboards/:id', element: modulePages.whiteboards },
-          { path: '/library', element: modulePages.library },
-          { path: '/library/:id', element: modulePages.library },
-          { path: '/documents', element: modulePages.documents },
-          { path: '/documents/:id', element: modulePages.documents },
-          { path: '/settings', element: modulePages.settings },
+          { path: '/tasks', element: lazyPage(<TasksPage />) },
+          { path: '/calendar', element: lazyPage(<CalendarPage />) },
+          { path: '/whiteboards', element: lazyPage(<WhiteboardsPage />) },
+          {
+            path: '/whiteboards/:id',
+            element: lazyPage(<WhiteboardDetailPage />),
+          },
+          { path: '/library', element: lazyPage(<LibraryPage />) },
+          {
+            path: '/library/:id',
+            element: lazyPage(<LibraryDetailPage />),
+          },
+          { path: '/documents', element: lazyPage(<DocumentsPage />) },
+          {
+            path: '/documents/:id',
+            element: lazyPage(<DocumentDetailPage />),
+          },
+          { path: '/settings', element: lazyPage(<SettingsPage />) },
         ],
       },
     ],

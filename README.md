@@ -79,10 +79,12 @@ Implemented:
 - Real login, registration, logout, password-reset request, and session restore
 - Public and protected route architecture
 - Responsive product shell and initial design system
-- Book-inspired landing and welcome experience
+- Interactive 3D storybook with physical page-turn navigation
+- Responsive interface previews for tasks, calendar, whiteboards, library,
+  documents, reader, and settings
 - Secure NestJS foundation, health endpoint, and current-profile endpoint
 - Initial relational schema, indexes, triggers, RLS, and Storage policies
 
-Tasks, calendar, whiteboards, PDF reading, annotations, and library operations
-are represented by explicit foundation pages. Their functional implementations
-belong to later product phases.
+Workspace previews are explicitly labeled and use example data. Their
+persistence layers, tldraw editing, PDF.js rendering, uploads, and realtime
+collaboration belong to dedicated implementation phases.
