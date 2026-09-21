@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -32,6 +33,8 @@ type WhiteboardRow = {
 
 @Injectable()
 export class WhiteboardsService {
+  private readonly logger = new Logger(WhiteboardsService.name);
+
   constructor(private readonly supabase: SupabaseService) {}
 
   async list(user: AuthenticatedUser) {
@@ -44,6 +47,7 @@ export class WhiteboardsService {
       .order('updated_at', { ascending: false });
 
     if (error) {
+      this.logger.error(`List failed: ${error.code ?? ''} ${error.message}`);
       throw new InternalServerErrorException('Unable to load whiteboards.');
     }
 
@@ -72,21 +76,20 @@ export class WhiteboardsService {
 
   async create(user: AuthenticatedUser, dto: CreateWhiteboardDto) {
     const client = this.supabase.forUser(user.accessToken);
-    const { data, error } = await client
-      .from('whiteboards')
-      .insert({
-        owner_id: user.id,
-        title: dto.title.trim(),
-        snapshot: {},
-      })
-      .select('id, owner_id, title, snapshot, created_at, updated_at')
-      .single<WhiteboardRow>();
+    const whiteboardId = crypto.randomUUID();
+    const { error } = await client.from('whiteboards').insert({
+      id: whiteboardId,
+      owner_id: user.id,
+      title: dto.title.trim(),
+      snapshot: {},
+    });
 
     if (error) {
+      this.logger.error(`Create failed: ${error.code ?? ''} ${error.message}`);
       throw new InternalServerErrorException('Unable to create the whiteboard.');
     }
 
-    return this.mapDetail({ ...data, whiteboard_members: [] }, user.id);
+    return this.get(user, whiteboardId);
   }
 
   async update(

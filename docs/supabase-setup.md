@@ -16,6 +16,8 @@ the repository.
    users who registered before the migrations were applied.
 7. Run `supabase/migrations/005_whiteboard_collaboration.sql` so editors can
    save shared canvases and owners can invite collaborators by email.
+8. Run `supabase/migrations/006_whiteboard_select_policy.sql` so a newly
+   created whiteboard can be read back in the same request.
 
 Run each file only once and in that order. The first migration creates the
 tables and profile trigger, the second enables RLS, the third creates private
