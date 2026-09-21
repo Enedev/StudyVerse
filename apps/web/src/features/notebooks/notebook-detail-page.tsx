@@ -220,7 +220,7 @@ function NotebookStudio({ notebook }: { notebook: NotebookDetail }) {
                 placeholder={tool === 'text' ? 'Write on this page…' : ''}
                 readOnly={tool !== 'text'}
                 className={cn(
-                  'absolute inset-0 z-0 h-full w-full resize-none bg-transparent p-8 text-base leading-8 outline-none',
+                  'absolute inset-0 z-0 h-full w-full resize-none bg-transparent p-8 text-base leading-8 text-[#1c1917] caret-[#1c1917] outline-none placeholder:text-stone-400 [color-scheme:light]',
                   tool === 'text' ? 'cursor-text' : 'pointer-events-none',
                 )}
               />
