@@ -64,9 +64,9 @@ export class NotebooksService {
         pages: [
           {
             id: crypto.randomUUID(),
-            mode: 'write',
             text: '',
-            scene: null,
+            strokes: [],
+            images: [],
           },
         ],
       })

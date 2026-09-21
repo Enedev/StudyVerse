@@ -1,11 +1,26 @@
 export type PaperType = 'blank' | 'lined' | 'grid' | 'dotted';
-export type NotebookPageMode = 'write' | 'draw';
+
+export type NotebookPoint = { x: number; y: number };
+
+export type NotebookStroke = {
+  id: string;
+  tool: 'pen' | 'highlight';
+  points: NotebookPoint[];
+};
+
+export type NotebookImage = {
+  id: string;
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+};
 
 export type NotebookPage = {
   id: string;
-  mode: NotebookPageMode;
   text: string;
-  scene: Record<string, unknown> | null;
+  strokes: NotebookStroke[];
+  images: NotebookImage[];
 };
 
 export type NotebookSummary = {
@@ -20,3 +35,12 @@ export type NotebookSummary = {
 export type NotebookDetail = NotebookSummary & {
   pages: NotebookPage[];
 };
+
+export function normalizePage(page: Partial<NotebookPage> & { id?: string }): NotebookPage {
+  return {
+    id: page.id ?? crypto.randomUUID(),
+    text: page.text ?? '',
+    strokes: Array.isArray(page.strokes) ? page.strokes : [],
+    images: Array.isArray(page.images) ? page.images : [],
+  };
+}

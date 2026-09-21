@@ -324,23 +324,33 @@ export function PdfReader({
                       key={pageNumber}
                       className={
                         visible
-                          ? 'relative mx-auto w-fit'
+                          ? 'block'
                           : 'pointer-events-none fixed -left-[10000px] top-0'
                       }
                     >
-                      <Page
-                        pageNumber={pageNumber}
-                        scale={zoom}
-                        className="shadow-xl"
-                        loading=""
-                        customTextRenderer={({ str }) => highlightText(str, highlight)}
-                        onRenderSuccess={() => markRendered(pageNumber)}
-                      />
-                      {visible && revealed && (
+                      {visible && revealed ? (
                         <PdfMarkup
                           documentId={documentId}
                           pageNumber={pageNumber}
                           annotations={annotations}
+                        >
+                          <Page
+                            pageNumber={pageNumber}
+                            scale={zoom}
+                            className="shadow-xl"
+                            loading=""
+                            customTextRenderer={({ str }) => highlightText(str, highlight)}
+                            onRenderSuccess={() => markRendered(pageNumber)}
+                          />
+                        </PdfMarkup>
+                      ) : (
+                        <Page
+                          pageNumber={pageNumber}
+                          scale={zoom}
+                          className="shadow-xl"
+                          loading=""
+                          customTextRenderer={({ str }) => highlightText(str, highlight)}
+                          onRenderSuccess={() => markRendered(pageNumber)}
                         />
                       )}
                     </div>
