@@ -1,22 +1,29 @@
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { json, urlencoded } from 'express';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bodyParser: false });
-  app.use(json({ limit: '8mb' }));
-  app.use(urlencoded({ extended: true, limit: '8mb' }));
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useBodyParser('json', { limit: '8mb' });
+  app.useBodyParser('urlencoded', { extended: true, limit: '8mb' });
   const config = app.get(ConfigService);
   const port = config.getOrThrow<number>('PORT');
+  const webOrigin = config.getOrThrow<string>('WEB_ORIGIN');
+  const allowedOrigins = new Set([webOrigin]);
+  const originUrl = new URL(webOrigin);
+  if (originUrl.hostname === 'localhost') {
+    originUrl.hostname = '127.0.0.1';
+    allowedOrigins.add(originUrl.origin);
+  }
 
   app.use(helmet());
   app.enableCors({
-    origin: config.getOrThrow<string>('WEB_ORIGIN'),
+    origin: [...allowedOrigins],
     credentials: true,
   });
   app.useGlobalPipes(

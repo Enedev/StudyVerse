@@ -256,8 +256,9 @@ export function TasksPage() {
             <AlertCircle className="text-destructive mx-auto size-6" />
             <h3 className="mt-4 text-sm font-semibold">Tasks are unavailable</h3>
             <p className="text-muted-foreground mx-auto mt-2 max-w-md text-xs leading-relaxed">
-              {tasksQuery.error.message} Confirm that migrations 001 and 002
-              have been executed in Supabase.
+              {tasksQuery.error.message === 'Failed to fetch'
+                ? 'The API on port 3000 is not running. Start it, then try again.'
+                : `${tasksQuery.error.message} Confirm that migrations 001 and 002 have been executed in Supabase.`}
             </p>
             <Button
               className="mt-5"
