@@ -10,9 +10,6 @@ export function HomePage() {
   return (
     <>
       <main className="relative overflow-hidden">
-        <div className="bg-secondary/55 absolute top-20 left-[5%] size-64 rounded-full blur-3xl" />
-        <div className="bg-accent/18 absolute top-40 right-[4%] size-72 rounded-full blur-3xl" />
-
         <section className="relative px-4 pt-16 pb-24 sm:px-6 sm:pt-24 lg:px-8 lg:pt-28">
           <motion.div
             className="mx-auto max-w-4xl text-center"
@@ -55,13 +52,9 @@ export function HomePage() {
           <motion.div
             id="interactive-book"
             className="mx-auto mt-20 max-w-[90rem] scroll-mt-24"
-            initial={{ opacity: 0, y: 36, rotateX: 4 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            transition={{
-              duration: 0.9,
-              delay: 0.15,
-              ease: [0.22, 1, 0.36, 1],
-            }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
           >
             <InteractiveStorybook />
           </motion.div>

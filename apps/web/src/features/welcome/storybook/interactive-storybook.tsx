@@ -196,18 +196,18 @@ export function InteractiveStorybook() {
           minHeight={220}
           maxHeight={690}
           startPage={0}
-          drawShadow
-          flippingTime={prefersReducedMotion ? 350 : 1100}
+          drawShadow={false}
+          flippingTime={prefersReducedMotion ? 280 : 560}
           usePortrait={false}
           startZIndex={10}
           autoSize
-          maxShadowOpacity={0.42}
+          maxShadowOpacity={0}
           showCover={false}
           mobileScrollSupport
           clickEventForward
           useMouseEvents
-          swipeDistance={24}
-          showPageCorners={!prefersReducedMotion}
+          swipeDistance={40}
+          showPageCorners={false}
           disableFlipByClick
           onFlip={(event: { data: number }) => {
             setCurrentSpread(
@@ -306,7 +306,7 @@ export function InteractiveStorybook() {
 
       <div className="book-interaction-hint" aria-hidden="true">
         <MousePointer2 />
-        Drag the outer page corner to turn
+        Use the arrows or swipe to turn the page
       </div>
     </section>
   );
